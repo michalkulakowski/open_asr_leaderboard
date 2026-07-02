@@ -12,7 +12,7 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 from io import BytesIO
 import assemblyai as aai
-import openai
+from openai import OpenAI
 from elevenlabs.client import ElevenLabs
 from rev_ai import apiclient
 from rev_ai.models import CustomerUrlData
@@ -175,10 +175,11 @@ def transcribe_with_retry(
                 return transcript.text
 
             elif model_name.startswith("openai/"):
+                client = OpenAI()
                 if use_url:
                     response = requests.get(sample["row"]["audio"][0]["src"])
                     audio_data = BytesIO(response.content)
-                    response = openai.Audio.transcribe(
+                    response = client.audio.transcriptions.create(
                         model=model_name.split("/")[1],
                         file=audio_data,
                         response_format="text",
@@ -187,7 +188,7 @@ def transcribe_with_retry(
                     )
                 else:
                     with open(audio_file_path, "rb") as audio_file:
-                        response = openai.Audio.transcribe(
+                        response = client.audio.transcriptions.create(
                             model=model_name.split("/")[1],
                             file=audio_file,
                             response_format="text",
